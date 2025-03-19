@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 196 100% 48%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 196 100% 48%;
+
+    --radius: 0.5rem;
+
+    /* Fitness-specific colors */
+    --workout-strength: 262 83% 58%;
+    --workout-cardio: 346 77% 49%;
+    --workout-hiit: 32 95% 44%;
+    --workout-yoga: 173 58% 39%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 196 100% 48%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 196 100% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom utility classes for fitness dashboard */
+@layer components {
+  .workout-card {
+    @apply rounded-lg border p-4 transition-all hover:shadow-md;
+  }
+
+  .trainer-card {
+    @apply rounded-lg border p-4 flex items-center gap-4;
+  }
+
+  .stat-card {
+    @apply rounded-lg border p-4 flex flex-col;
+  }
+
+  .workout-strength {
+    @apply bg-[hsl(var(--workout-strength)/0.1)] border-[hsl(var(--workout-strength)/0.2)];
+  }
+
+  .workout-cardio {
+    @apply bg-[hsl(var(--workout-cardio)/0.1)] border-[hsl(var(--workout-cardio)/0.2)];
+  }
+
+  .workout-hiit {
+    @apply bg-[hsl(var(--workout-hiit)/0.1)] border-[hsl(var(--workout-hiit)/0.2)];
+  }
+
+  .workout-yoga {
+    @apply bg-[hsl(var(--workout-yoga)/0.1)] border-[hsl(var(--workout-yoga)/0.2)];
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fitness-gradient {
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--workout-strength)));
+  }
+
+  .mobile-nav-item {
+    @apply flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors;
+  }
+
+  .mobile-nav-item-active {
+    @apply bg-primary/10 text-primary;
+  }
+}
+
