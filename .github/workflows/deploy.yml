@@ -14,7 +14,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+        with: 
+          fetch-depth: 0
+
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
@@ -29,7 +31,7 @@ jobs:
 
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install 
         
       - name: Run linting
         run: pnpm run lint || true  
