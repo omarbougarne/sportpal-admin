@@ -1,146 +1,89 @@
-import { create } from 'zustand';
-import WORKOUTS_API from '@/lib/api/workout-api';
-import type { Workout } from '@/types/workout';
-
-interface WorkoutQuery {
-    page?: number;
-    limit?: number;
-    search?: string;
-    difficulty?: string;
-    muscleGroup?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-}
+import { create } from "zustand"
+import { devtools } from "zustand/middleware"
+import WORKOUTS_API from "@/lib/api/workout-api"
+import type { Workout, CreateWorkoutDto, UpdateWorkoutDto, QueryWorkoutDto } from "@/types/workout"
 
 interface WorkoutState {
-    workouts: Workout[];
-    selectedWorkout: Workout | null;
-    isLoading: boolean;
-    error: string | null;
-    totalWorkouts: number;
+    workouts: Workout[]
+    selectedWorkout: Workout | null
+    isLoading: boolean
+    error: string | null
 
-    // Admin actions
-    fetchWorkouts: (query?: WorkoutQuery) => Promise<void>;
-    fetchWorkoutById: (id: string) => Promise<void>;
-    createWorkout: (data: Omit<Workout, '_id' | 'createdAt' | 'updatedAt'>) => Promise<Workout>;
-    updateWorkout: (id: string, data: Partial<Workout>) => Promise<Workout>;
-    deleteWorkout: (id: string) => Promise<void>;
-    fetchUserWorkouts: (userId: string) => Promise<void>;
-    fetchMyWorkouts: () => Promise<void>;
+    // Actions
+    fetchWorkouts: (query?: QueryWorkoutDto) => Promise<void>
+    fetchWorkoutById: (id: string) => Promise<void>
+    deleteWorkout: (id: string) => Promise<void>
+    setSelectedWorkout: (workout: Workout | null) => void
+    clearError: () => void
 }
 
-const useWorkoutStore = create<WorkoutState>((set, get) => ({
-    workouts: [],
-    selectedWorkout: null,
-    isLoading: false,
-    error: null,
-    totalWorkouts: 0,
+const useWorkoutStore = create<WorkoutState>()(
+    devtools(
+        (set) => ({
+            workouts: [], // Initialize as empty array
+            selectedWorkout: null,
+            isLoading: false,
+            error: null,
 
-    fetchWorkouts: async (query?: WorkoutQuery) => {
-        set({ isLoading: true, error: null });
-        try {
-            const response = await WORKOUTS_API.getAll(query);
-            set({
-                workouts: Array.isArray(response.data) ? response.data : response.data || [],
-                totalWorkouts: 'total' in response ? (response.total as number) : response.data.length,
-                isLoading: false
-            });
-        } catch (err: any) {
-            console.error("Error fetching workouts:", err);
-            set({ isLoading: false, error: err.message || 'Failed to fetch workouts' });
-        }
-    },
+            fetchWorkouts: async (query?: QueryWorkoutDto) => {
+                set({ isLoading: true, error: null })
+                try {
+                    const response = await WORKOUTS_API.getAll(query)
+                    // Ensure response.data is an array
+                    const workoutsData = Array.isArray(response.data) ? response.data : []
+                    set({ workouts: workoutsData, isLoading: false })
+                } catch (error) {
+                    console.error("Error fetching workouts:", error)
+                    set({
+                        workouts: [], // Reset to empty array on error
+                        error: error instanceof Error ? error.message : "Failed to fetch workouts",
+                        isLoading: false,
+                    })
+                }
+            },
 
-    fetchWorkoutById: async (id: string) => {
-        set({ isLoading: true, error: null });
-        try {
-            const workout = await WORKOUTS_API.getById(id);
-            set({ selectedWorkout: workout.data, isLoading: false });
-        } catch (err: any) {
-            console.error("Error fetching workout details:", err);
-            set({ isLoading: false, error: err.message || 'Failed to fetch workout details' });
-        }
-    },
+            fetchWorkoutById: async (id: string) => {
+                set({ isLoading: true, error: null })
+                try {
+                    const response = await WORKOUTS_API.getById(id)
+                    set({ selectedWorkout: response.data, isLoading: false })
+                } catch (error) {
+                    console.error("Error fetching workout:", error)
+                    set({
+                        error: error instanceof Error ? error.message : "Failed to fetch workout",
+                        isLoading: false,
+                    })
+                }
+            },
 
-    createWorkout: async (data: Omit<Workout, '_id' | 'createdAt' | 'updatedAt'>) => {
-        set({ isLoading: true, error: null });
-        try {
-            const response = await WORKOUTS_API.create(data);
-            const newWorkout = response.data;
-            set(state => ({
-                workouts: [newWorkout, ...state.workouts],
-                isLoading: false
-            }));
-            return newWorkout;
-        } catch (err: any) {
-            console.error("Error creating workout:", err);
-            set({ isLoading: false, error: err.message || 'Failed to create workout' });
-            throw err;
-        }
-    },
+            deleteWorkout: async (id: string) => {
+                set({ isLoading: true, error: null })
+                try {
+                    await WORKOUTS_API.delete(id)
+                    set(state => ({
+                        workouts: state.workouts.filter(workout => workout._id !== id),
+                        selectedWorkout: state.selectedWorkout?._id === id ? null : state.selectedWorkout,
+                        isLoading: false,
+                    }))
+                } catch (error) {
+                    console.error("Error deleting workout:", error)
+                    set({
+                        error: error instanceof Error ? error.message : "Failed to delete workout",
+                        isLoading: false,
+                    })
+                }
+            },
 
-    updateWorkout: async (id: string, data: Partial<Workout>) => {
-        set({ isLoading: true, error: null });
-        try {
-            const response = await WORKOUTS_API.update(id, data);
-            const updatedWorkout = response.data;
-            set(state => ({
-                workouts: state.workouts.map(workout =>
-                    workout._id === id ? updatedWorkout : workout
-                ),
-                selectedWorkout: updatedWorkout,
-                isLoading: false
-            }));
-            return updatedWorkout;
-        } catch (err: any) {
-            console.error("Error updating workout:", err);
-            set({ isLoading: false, error: err.message || 'Failed to update workout' });
-            throw err;
-        }
-    },
+            setSelectedWorkout: (workout: Workout | null) => {
+                set({ selectedWorkout: workout })
+            },
 
-    deleteWorkout: async (id: string) => {
-        set({ isLoading: true, error: null });
-        try {
-            await WORKOUTS_API.delete(id);
-            set(state => ({
-                workouts: state.workouts.filter(workout => workout._id !== id),
-                isLoading: false
-            }));
-        } catch (err: any) {
-            console.error("Error deleting workout:", err);
-            set({ isLoading: false, error: err.message || 'Failed to delete workout' });
-            throw err;
-        }
-    },
+            clearError: () => {
+                set({ error: null })
+            },
+        }),
+        { name: "workout-store" }
+    )
+)
 
-    fetchUserWorkouts: async (userId: string) => {
-        set({ isLoading: true, error: null });
-        try {
-            const response = await WORKOUTS_API.getUserWorkouts(userId);
-            set({
-                workouts: response.data,
-                isLoading: false
-            });
-        } catch (err: any) {
-            console.error("Error fetching user workouts:", err);
-            set({ isLoading: false, error: err.message || 'Failed to fetch user workouts' });
-        }
-    },
-
-    fetchMyWorkouts: async () => {
-        set({ isLoading: true, error: null });
-        try {
-            const response = await WORKOUTS_API.getMyWorkouts();
-            set({
-                workouts: response.data,
-                isLoading: false
-            });
-        } catch (err: any) {
-            console.error("Error fetching my workouts:", err);
-            set({ isLoading: false, error: err.message || 'Failed to fetch my workouts' });
-        }
-    }
-}));
-
-export default useWorkoutStore;
+export default useWorkoutStore
